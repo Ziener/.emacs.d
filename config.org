@@ -1,0 +1,164 @@
+#+TITLE: My Emacs config
+#+AUTHOR: Pascal Ziener
+#+OPTION: num:nil
+
+
+
+Prevents that the output of a code block (#+BEGIN_SRC) will be inserted below the code block.
+Instead it is displayed below the mode line
+- Is this also called minibuffer? have to check that again
+#+PROPERTY: header-args :results silent
+
+* Pascal Ziener's Emacs setup
+based on
+- https://gitlab.com/renzix/Dotfiles-Mirror /  https://www.youtube.com/watch?v=PsyPbjZOpYs
+- https://medium.com/@suvratapte/configuring-emacs-from-scratch-intro-3157bed9d040
+- https://medium.com/@suvratapte/configuring-emacs-from-scratch-packages-220bbc5e55b7
+- https://medium.com/@suvratapte/configuring-emacs-from-scratch-use-package-c30382297877
+- https://github.com/suvratapte/dot-emacs-dot-d/blob/e7f44d981004b44bb9ae23b6b67c421404ea6b4e/init.el#L19
+- https://github.com/suvratapte/dot-emacs-dot-d/blob/e7f44d981004b44bb9ae23b6b67c421404ea6b4e/init.el#L94
+** My defaults
+Do not show the startup screen
+#+begin_src emacs-lisp 
+  (setq inhibit-startup-message t)
+#+end_src
+
+Disable toolbar and scroll bar, menu bar stays enabled for the moment 
+#+BEGIN_SRC emacs-lisp
+  (tool-bar-mode -1)
+  (menu-bar-mode 1)
+  (scroll-bar-mode -1)
+#+END_SRC
+
+Highlight current line
+#+begin_src emacs-lisp
+  (global-hl-line-mode t)
+#+end_src
+
+Display line and column numbers aka coordinates of the point location in the mode line
+#+begin_src emacs-lisp
+  (line-number-mode t)
+#+end_src
+
+Do not use 'init.el' for 'custom-*' code - use 'custom-file.el' instead.
+Assuming that the code in custom-file is executed before the code ahead of this line is not a safe assumption. So load this file proactively.
+#+begin_src emacs-lisp
+  (setq custom-file "~/.emacs.d/custom-file.el")
+  (load-file custom-file)
+#+end_src
+
+** old preferences, need to be moved to 'My Defaults'
+
+    I prefer to use the common keybinding for Cut & Paste (C-x/C-c/C-v)
+    
+    #+NAME: cua-keys
+    #+BEGIN_SRC emacs-lisp
+      (cua-mode t)
+    #+END_SRC
+    
+    When you open a file that is a symlink, Emacs asks if it should follow the Symlink.
+    I want to disable that
+
+    #+NAME: symlink
+    #+BEGIN_SRC emacs-lisp
+      (setq vc-follow-symlinks t)
+    #+END_SRC
+
+    Instead of asking for yes or no it will prompt you for y or n
+    without the enter.
+
+    #+NAME: yes-or-no
+    #+BEGIN_SRC emacs-lisp
+      (defalias 'yes-or-no-p 'y-or-n-p)
+    #+END_SRC
+
+
+** Packages
+Require and initialize 'package'; Enable installation of packages from MELPA by adding an entry to package-archives after (require 'package) and before the call to package-initialize: 
+#+begin_src emacs-lisp
+  (require 'package)
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+  (package-initialize)
+#+end_src
+
+Install use-package
+#+begin_src emacs-lisp 
+  (when (not (package-installed-p 'use-package))
+    (package-refresh-contents)
+    (package-install 'use-package))  
+#+end_src
+
+Ensure that use-package will always download a package if it is not there.
+#+begin_src emacs-lisp
+  (require 'use-package)
+  (require 'use-package-ensure)
+  (setq use-package-always-ensure t)
+#+end_src
+
+*** Themes
+
+Let's try the dark Spacemacs theme
+#+begin_src emacs-lisp
+  (use-package spacemacs-theme
+    :defer t
+    :init (load-theme 'spacemacs-dark t))
+#+end_src
+
+#+BEGIN_SRC emacs-lisp
+  ;;(use-package doom-themes
+  ;;  :config
+  ;;  (load-theme 'doom-gruvbox t))
+#+END_SRC 
+
+** Org Mode
+
+  All my settings related to org-mode
+
+*** Display
+**** Org Indent Mode
+Turn on Org Indent mode for all files
+
+#+NAME org-indent
+#+BEGIN_SRC emacs-lisp
+  (setq org-startup-indented t)
+#+END_SRC
+
+*** Org files
+#+NAME org-directory
+#+BEGIN_SRC emacs-lisp
+(setq org-directory '("~/1-Projects/" "~/2-Areas"))
+#+END_SRC
+*** States / todo keywords
+
+#+NAME org-todo-keywords
+#+BEGIN_SRC emacs-lisp
+(setq org-todo-keywords
+      (quote ((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
+         (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)"))))
+#+END_SRC
+
+#+NAME org-todo-keyword-faces
+#+BEGIN_SRC emacs-lisp
+(setq org-todo-keyword-faces '(("TODO" :foreground "red" :weight bold)
+              ("NEXT" :foreground "blue" :weight bold)
+              ("DONE" :foreground "forest green" :weight bold)
+              ("WAITING" :foreground "orange" :weight bold)
+              ("HOLD" :foreground "magenta" :weight bold)
+              ("CANCELLED" :foreground "forest green" :weight bold)))
+#+END_SRC
+
+*** Agenda
+**** Agenda Files
+
+#+NAME org-agenda-files
+#+BEGIN_SRC emacs-lisp
+  (setq org-agenda-files '("~/1-Projects/" "~/2-Areas/"))
+#+END_SRC
+
+For a better experience, the three Org commands org-store-link, org-capture and org-agenda ought to be accessible anywhere in Emacs, not just in Org buffers. To that effect, you need to bind them to globally available keys, like the ones reserved for users (see (elisp)Key Binding Conventions). Here are suggested bindings, please modify the keys to your own liking. 
+[[https://orgmode.org/org.html#Activation]]
+#+BEGIN_SRC emacs-lisp
+  (global-set-key (kbd "C-c a") 'org-agenda)
+  (global-set-key (kbd "C-c l") 'org-store-link)
+  (global-set-key (kbd "C-c c") 'org-capture)
+#+END_SRC
